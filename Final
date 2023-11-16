@@ -1,0 +1,588 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan 12 14:55:30 2023
+
+@author: Cameron Hershey
+"""
+#%% PACKAGES
+import netCDF4 as nc
+from matplotlib import pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import statsmodels.api as sm
+#%% Dataset variables
+fneu = 'C:/SWORDV14/netcdf/eu_sword_v14.nc'
+fnas = 'C:/SWORDV14/netcdf/as_sword_v14.nc'
+fnna = 'C:/SWORDV14/netcdf/na_sword_v14.nc'
+fnsa = 'C:/SWORDV14/netcdf/sa_sword_v14.nc'
+fnaf = 'C:/SWORDV14/netcdf/af_sword_v14.nc'
+fnoc = 'C:/SWORDV14/netcdf/oc_sword_v14.nc'
+#%% Variables
+#Variables for each netcdf file dataset
+ds_eu = nc.Dataset(fneu)
+ds_as = nc.Dataset(fnas)
+ds_na = nc.Dataset(fnna)
+ds_sa = nc.Dataset(fnsa)
+ds_af = nc.Dataset(fnaf)
+ds_oc = nc.Dataset(fnoc)
+#Variables for one of the three main variables in SWORD, i.e, REACHES/NODES/CENTERLINES
+#REACHES
+eu_reaches = (ds_eu['reaches'])
+as_reaches = (ds_as['reaches'])
+na_reaches = (ds_na['reaches'])
+sa_reaches = (ds_sa['reaches'])
+af_reaches = (ds_af['reaches'])
+oc_reaches = (ds_oc['reaches'])
+#NODES
+eu_nodes = (ds_eu['nodes'])
+as_nodes = (ds_as['nodes'])
+na_nodes = (ds_na['nodes'])
+sa_nodes = (ds_sa['nodes'])
+af_nodes = (ds_af['nodes'])
+oc_nodes = (ds_oc['nodes'])
+#CENTERLINES
+eu_centerlines = (ds_eu['centerlines'])
+as_centerlines = (ds_as['centerlines'])
+na_centerlines = (ds_na['centerlines'])
+sa_centerlines = (ds_sa['centerlines'])
+af_centerlines = (ds_af['centerlines'])
+oc_centerlines = (ds_oc['centerlines'])
+#VARIABLES FOR EACH VARIABLE? NOT SURE IF THESE ARE ACTUALLY BEING USED FOR ANYTHING
+eu_width = (eu_reaches['width'])
+as_width = (as_reaches['width'])
+na_width = (na_reaches['width'])
+sa_width = (sa_reaches['width'])
+af_width = (af_reaches['width'])
+oc_width = (oc_reaches['width'])
+eu_slope = (eu_reaches['slope'])
+as_slope = (as_reaches['slope'])
+na_slope = (na_reaches['slope'])
+sa_slope = (sa_reaches['slope'])
+af_slope = (af_reaches['slope'])
+oc_slope = (oc_reaches['slope'])
+eu_sinuosity = (eu_nodes['sinuosity'])
+as_sinuosity = (as_nodes['sinuosity'])
+na_sinuosity = (na_nodes['sinuosity'])
+sa_sinuosity = (sa_nodes['sinuosity'])
+af_sinuosity = (af_nodes['sinuosity'])
+oc_sinuosity = (oc_nodes['sinuosity'])
+
+
+#%%
+# asnonreaches = len(eu_width)
+# sanonreaches = len(sa_width)
+# nanonreaches = len(na_width)
+# ocnonreaches = len(oc_width)
+# afnonreaches = len(af_width)
+# eunonreaches = len(eu_width)
+# reachestotal = (asnonreaches+sanonreaches+nanonreaches+ocnonreaches+afnonreaches+eunonreaches)
+# print("AS number",as_width),print("SA number",sa_width),print("NA number",na_width),print("OC number",oc_width),print("AF number",af_width),print("EU number",eu_width),print("Non Number",reachestotal)
+#%%ARCTIC SUBSET NODES
+latbounds_asarc2 = [66.563667 , 90]
+lats_asarc2 = as_nodes.variables['y'][:]
+latli_asarc2 = np.argmin( np.abs(lats_asarc2-latbounds_asarc2[0]))
+latui_asarc2 = np.argmin( np.abs(lats_asarc2-latbounds_asarc2[1]))
+as_sin_arctic = as_nodes.variables['sinuosity'][latui_asarc2:latli_asarc2] #Sinuosity Arctic Subset Asia
+as_meander_arctic = as_nodes.variables['meander_length'][latui_asarc2:latli_asarc2] #Meander Length Arctic Subset Asia
+#NA
+latbounds_naarc2 =  [ 66.563667 , 90 ]
+lats_naarc2 = na_nodes.variables['y'][:]
+latli_naarc2 = np.argmin( np.abs( lats_naarc2 - latbounds_naarc2[1] ) )
+latui_naarc2 = np.argmin( np.abs( lats_naarc2 - latbounds_naarc2[0] ) )
+na_sin_arctic = na_nodes.variables['sinuosity'][latui_naarc2:latli_naarc2] #Sinuosity Arctic Subset NA
+na_meander_arctic = na_nodes.variables['meander_length'][latui_naarc2:latli_naarc2] #Meander length Arctic Subset NA
+#EU
+latbounds_euarc2 =  [ 66.563667 , 90 ]
+lats_euarc2 = eu_nodes.variables['y'][:]
+latli_euarc2 = np.argmin( np.abs( lats_euarc2 - latbounds_euarc2[1] ) )
+latui_euarc2 = np.argmin( np.abs( lats_euarc2 - latbounds_euarc2[0] ) )
+eu_sin_arctic = eu_nodes.variables['sinuosity'][latui_euarc2:latli_euarc2] #Sinuosity Arctic Subset EU
+eu_meander_arctic = eu_nodes.variables['meander_length'][latui_euarc2:latli_euarc2] #Meander length Arctic Subset EU
+#%%  ARCTIC SUBSET REACHES
+#REACHES AS
+latbounds_asarc = [66.563667 , 79.74419019897734]
+lats_asarc = as_reaches.variables['y'][:]
+latli_asarc = np.argmin( np.abs(lats_asarc-latbounds_asarc[0]))
+latui_asarc = np.argmin( np.abs(lats_asarc-latbounds_asarc[1]))
+as_width_arctic = as_reaches.variables['width'][latui_asarc:latli_asarc] #Width Arctic Subset Asia
+as_slope_arctic = as_reaches.variables['slope'][latui_asarc:latli_asarc] #Slope Arctic Subset Asia
+#NA
+#REACHES NA
+latbounds_naarc =  [ 66.563667 , 82.31075059339722 ]
+lats_naarc = na_reaches.variables['y'][:]
+latli_naarc = np.argmin( np.abs( lats_naarc - latbounds_naarc[0] ) )
+latui_naarc = np.argmin( np.abs( lats_naarc - latbounds_naarc[1] ) )
+na_width_arctic = na_reaches.variables['width'][latli_naarc:latui_naarc] #Width Arctic Subset NA
+na_slope_arctic = na_reaches.variables['slope'][latli_naarc:latui_naarc] #Slope Arctic Subset NA
+#EU
+#REACHES
+latbounds_euarc =  [ 66.563667 , 81.11487917907918 ]
+lats_euarc = eu_reaches.variables['y'][:]
+latli_euarc = np.argmin( np.abs( lats_euarc - latbounds_euarc[0] ) )
+latui_euarc = np.argmin( np.abs( lats_euarc - latbounds_euarc[1] ) )
+eu_width_arctic = eu_reaches.variables['width'][latli_euarc:latui_euarc] #Width Arctic Subest EU
+eu_slope_arctic = eu_reaches.variables['slope'][latli_euarc:latui_euarc] #Slope Arctic Subset EU
+
+#%% ARCTIC SUBSET CONCATENATING
+#Each subset gets a tuple variable to confirm accuracy of each subset. 
+#THEN each tuple variable gets concatenated into another variable for plotting and analysis
+# WIDTH ARCTIC
+w_tuple = (eu_width_arctic , as_width_arctic , na_width_arctic) 
+arctic_sub_width = np.concatenate(w_tuple)
+#SLOPE ARCTIC
+slo_tuple = (eu_slope_arctic , as_slope_arctic , na_slope_arctic)
+arctic_sub_slope = np.concatenate(slo_tuple)
+#SINUOSITY ARCTIC
+sin_tuple = (eu_sin_arctic, na_sin_arctic, as_sin_arctic)
+arctic_sub_sin = np.concatenate(sin_tuple)
+#MEANDER ARCTIC
+meander_tuple = (eu_meander_arctic , na_meander_arctic , as_meander_arctic)
+arctic_sub_meander = np.concatenate(meander_tuple)
+#%%Plot check, checking tuple variables to check if each variable is being input accurately.
+# f, ax=plt.subplots()
+# ax.hist(w_tuple,bins=1,histtype='barstacked' )
+# plt.show
+# f, ax=plt.subplots()
+# ax.hist(arctic_sub_slope,bins=1)
+# plt.show
+# f, ax=plt.subplots()
+# ax.hist(arctic_sub_sin,bins=1)
+# plt.show
+# f, ax=plt.subplots()
+# ax.hist(arctic_sub_meander,bins=1)
+# plt.show
+#%%
+euarclen=len(eu_width_arctic)
+#euarclen1=len(eu_slope_arctic)
+asarclen=len(as_width_arctic)
+naarclen=len(na_width_arctic)
+arctictotal=(euarclen+asarclen+naarclen)
+print("arctictotal",arctictotal)
+print("EU Reach num", euarclen), print("AS Reach num",asarclen), print("NA Reach num",naarclen)
+euarclen1=len(eu_sin_arctic)
+#euarclen1=len(eu_slope_arctic)
+asarclen1=len(as_sin_arctic)
+naarclen1=len(na_sin_arctic)
+arctictotal=(euarclen+asarclen+naarclen)
+print("arctictotal",arctictotal)
+print("EU Reach num", euarclen1), print("AS Reach num",asarclen1), print("NA Reach num",naarclen1)
+#%% ARCTIC Histograms
+# WIDTH
+fig, ax = plt.subplots()
+ax.hist(arctic_sub_width,bins=5000 ) #
+plt.xscale('log') #Log scale provides a better hist, Why is it better?
+Q25 = np.quantile(arctic_sub_width,0.25)
+print("Arctic Width q1",Q25)
+Q50 = np.quantile(arctic_sub_width, 0.5) #Medians and quartiles
+print("Arctic Width q2",Q50)
+Q75 = np.quantile(arctic_sub_width, 0.75) 
+print("Arctic Width q3",Q75)
+plt.axvline(Q25, linestyle = ('dotted'), color = 'k') #25th Quartile
+plt.axvline(Q50, linestyle = ('dashdot'), color = 'r') #Median
+plt.axvline(Q75, linestyle = ('dotted'), color = 'k') #75th Quartile
+handles=('Q1: 60.0 m',
+         'Median: 105.0 m',
+         'Q3: 276.0 m') #Legend for Q25,Median,Q75
+plt.legend(handles) #Legend
+plt.title('Arctic River Width',fontweight='bold') #Title 
+plt.xlabel('Width (m)',fontweight='bold') #x label
+plt.ylabel('Number of Occurences',fontweight='bold') #y label
+plt.savefig("ARWhd.png",format='png', dpi=1200)
+plt.show
+# SLOPE ARCTIC
+fig, ax = plt.subplots()
+#Not sure if this is the best way to create bins for slope hist. Otherwise the hist looks very off.
+ax.hist((arctic_sub_slope),bins=[0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0,1.05,1.1,1.15,1.2,1.25,1.3,1.35,1.4,1.45,1.5,1.55,1.6,1.65,1.7,1.75,1.8,1.85,1.9,1.95,2.0,2.05,2.1,2.15,2.2,2.25,2.3,2.35,2.4,2.45,2.5,2.55,2.6,2.65,2.7,2.75,2.8,2.85,2.9,2.95,3.0])
+#plt.xscale('log')
+Q25 = np.quantile(arctic_sub_slope,0.25) 
+print("Arctic Slope q1",Q25)
+Q50 = np.quantile(arctic_sub_slope, 0.5) 
+print("Arctic Slope q2",Q50)
+Q75 = np.quantile(arctic_sub_slope, 0.75)
+print("Arctic Slope q3",Q75)
+plt.axvline(Q25, linestyle=('dotted'), color = 'k')
+plt.axvline(Q50, linestyle=('dashdot'), color = 'r')
+plt.axvline(Q75, linestyle=('dotted'), color = 'k')
+handles=('Q1: 0.01589 m/km',
+         'Median: 0.41976 m/km',
+         'Q3: 1.8809 m/km')
+plt.legend(handles)
+plt.title('Arctic River Slope',fontweight='bold')
+plt.xlabel('Slope (m/km)',fontweight='bold')
+plt.ylabel('Number of Occurences',fontweight='bold')
+plt.savefig("ARShd.png",format='png', dpi=1200)
+plt.show
+# SINUOSITY ARCTIC
+fig, ax = plt.subplots()
+ax.hist(arctic_sub_sin,bins=[1,1,1.05,1.10,1.15,1.2,1.25,1.3,1.35,1.4,1.45,1.5,1.55,1.6,1.65,1.7,1.75,1.8,1.85,1.9,1.95,2.0,2.05,2.1,2.15,2.2,2.25,2.3,2.35,2.4,2.45,2.5,2.55,2.6,2.65,2.7,2.75,2.8,2.85,2.9,2.95,3.0])
+Q25 = np.nanquantile(arctic_sub_sin, 0.25) 
+print("Arctic Sinu q1",Q25)
+Q50 = np.nanquantile(arctic_sub_sin, 0.5)
+print("Arctic Sinu q2",Q50)
+Q75 = np.nanquantile(arctic_sub_sin, 0.75)
+print("Arctic Sinu q3",Q75)
+plt.axvline(Q25, linestyle=('dotted') , color = 'k')  
+plt.axvline(Q50, linestyle=('dashdot') , color = 'r')  
+plt.axvline(Q75, linestyle=('dotted') , color = 'k')
+handles=('Q1: 1.034',
+         'Median: 1.108',
+         'Q3: 1.348')
+plt.legend(handles)
+plt.title('Arctic River Sinuosity',fontweight='bold')
+plt.xlabel('Sinuosity',fontweight='bold')
+plt.ylabel('Number of Occurences',fontweight='bold')
+plt.ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+plt.savefig("ARSinhd.png",format='png', dpi=1200)
+plt.show
+# MEANDER WAVELENGTH
+fig, ax = plt.subplots()
+ax.hist(arctic_sub_meander,bins= 100)
+Q25 = np.quantile(arctic_sub_meander, 0.25), 
+print("Arctic WL q1",Q25)
+Q50 = np.quantile(arctic_sub_meander, 0.5), 
+print("Arctic WL q2",Q50)
+Q75 = np.quantile(arctic_sub_meander, 0.75), 
+print("Arctic WL q3",Q75)
+plt.axvline(Q25, linestyle=('dotted') , color = 'k')  
+plt.axvline(Q50, linestyle=('dashdot') , color = 'r')  
+plt.axvline(Q75, linestyle=('dotted') , color = 'k')
+handles=('Q1: 1151.58 m',
+         'Median: 1818.28 m',
+         'Q3: 3001.19 m')
+plt.legend(handles)
+plt.title('Arctic River Meander Wavelength',fontweight='bold')
+plt.xlabel('Meander Wavelength m',fontweight='bold')
+plt.ylabel('Number of Occurences',fontweight='bold')
+plt.ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+plt.savefig("ARMLhd.png",format='png', dpi=1200)
+plt.show
+#%% NON ARCTIC SUBSET VARIABLES NODES
+latbounds_na2 =  [ 8.090422889313631 , 66.563667 ]
+lats_na2 = na_nodes.variables['y'][:]
+latli_na2 = np.argmin( np.abs( lats_na2 - latbounds_na2[0] ) )
+latui_na2 = np.argmin( np.abs( lats_na2 - latbounds_na2[1] ) )
+na_nonarc_si = na_nodes.variables['sinuosity'][latli_na2:latui_na2]
+na_nonarc_wave = na_nodes.variables['meander_length'][latli_na2:latui_na2]
+
+
+latbounds_eu2 =  [ 25.381903286426613 , 66.563667 ]
+lats_eu2 = eu_nodes.variables['y'][:]
+latli_eu2 = np.argmin( np.abs( lats_eu2 - latbounds_eu2[1] ) )
+latui_eu2 = np.argmin( np.abs( lats_eu2 - latbounds_eu2[0] ) )
+eu_nonarc_si = eu_nodes.variables['sinuosity'][latli_eu2:latui_eu2]
+eu_nonarc_wave = eu_nodes.variables['meander_length'][latli_eu2:latui_eu2]
+
+
+latbounds_as2 =  [ 1.817127242541506 , 66.563667 ]
+lats_as2 = as_nodes.variables['y'][:]
+latli_as2 = np.argmin( np.abs( lats_as2 - latbounds_as2[1] ) )
+latui_as2 = np.argmin( np.abs( lats_as2 - latbounds_as2[0] ) )
+as_nonarc_si = as_nodes.variables['sinuosity'][latli_as2:latui_as2]
+as_nonarc_wave = as_nodes.variables['meander_length'][latli_as2:latui_as2]
+
+latbounds_oc2 =  [ -90.0 , 66.563667 ]
+lats_oc2 = oc_nodes.variables['y'][:]
+latli_oc2 = np.argmin( np.abs( lats_oc2 - latbounds_oc2[1] ) )
+latui_oc2 = np.argmin( np.abs( lats_oc2 - latbounds_oc2[0] ) )
+oc_nonarc_si = oc_nodes.variables['sinuosity'][latli_oc2:latui_oc2]
+oc_nonarc_wave = oc_nodes.variables['meander_length'][latli_oc2:latui_oc2]
+
+latbounds_af2 =  [ -90.0 , 90.0 ]
+lats_af2 = af_nodes.variables['y'][:]
+latli_af2 = np.argmin( np.abs( lats_af2 - latbounds_af2[0] ) )
+latui_af2 = np.argmin( np.abs( lats_af2 - latbounds_af2[1] ) )
+af_nonarc_si = af_nodes.variables['sinuosity'][latli_af2:latui_af2]
+af_nonarc_wave = af_nodes.variables['meander_length'][latli_af2:latui_af2]
+
+latbounds_sa2 =  [ -90.0 , 66.563667 ]
+lats_sa2 = sa_nodes.variables['y'][:]
+latli_sa2 = np.argmin( np.abs( lats_sa2 - latbounds_sa2[1] ) )
+latui_sa2 = np.argmin( np.abs( lats_sa2 - latbounds_sa2[0] ) )
+sa_nonarc_si = sa_nodes.variables['sinuosity'][latli_sa2:latui_sa2]
+sa_nonarc_wave = sa_nodes.variables['meander_length'][latli_sa2:latui_sa2]
+#%% NON ARCTIC SUBSET VARIABLES REACHES
+#BOUNDS
+#Lats variable
+#Lower Index
+#Upper Index
+latbounds_na =  [ 0 , 66.563667 ]
+lats_na = na_reaches.variables['y'][:]
+latli_na = np.argmin( np.abs( lats_na - latbounds_na[0] ) )
+latui_na = np.argmin( np.abs( lats_na - latbounds_na[1] ) )
+na_nonarc_w = na_reaches.variables['width'][latli_na:latui_na]
+na_nonarc_s = na_reaches.variables['slope'][latli_na:latui_na]
+
+latbounds_eu =  [ 25.381903286426613 , 66.563667 ]
+lats_eu = eu_reaches.variables['y'][:]
+latli_eu = np.argmin( np.abs( lats_eu - latbounds_eu[1] ) )
+latui_eu = np.argmin( np.abs( lats_eu - latbounds_eu[0] ) )
+eu_nonarc_w = eu_reaches.variables['width'][latli_eu:latui_eu]
+eu_nonarc_s = eu_reaches.variables['slope'][latli_eu:latui_eu]
+
+latbounds_as =  [ 1.817127242541506 , 66.563667 ]
+lats_as = as_reaches.variables['y'][:]
+latli_as = np.argmin( np.abs( lats_as - latbounds_as[1] ) )
+latui_as = np.argmin( np.abs( lats_as - latbounds_as[0] ) )
+as_nonarc_w = as_reaches.variables['width'][latli_as:latui_as]
+as_nonarc_s = as_reaches.variables['slope'][latli_as:latui_as]
+
+latbounds_oc =  [ -90.0 , 66.563667 ]
+lats_oc = oc_reaches.variables['y'][:]
+latli_oc = np.argmin( np.abs( lats_oc - latbounds_oc[1] ) )
+latui_oc = np.argmin( np.abs( lats_oc - latbounds_oc[0] ) )
+oc_nonarc_w = oc_reaches.variables['width'][latli_oc:latui_oc]
+oc_nonarc_s = oc_reaches.variables['slope'][latli_oc:latui_oc]
+
+latbounds_af =  [ -90.0 , 90.0 ]
+lats_af = af_reaches.variables['y'][:]
+latli_af = np.argmin( np.abs( lats_af - latbounds_af[0] ) )
+latui_af = np.argmin( np.abs( lats_af - latbounds_af[1] ) )
+af_nonarc_w = af_reaches.variables['width'][latli_af:latui_af]
+af_nonarc_s = af_reaches.variables['slope'][latli_af:latui_af]
+
+latbounds_sa =  [ -90.0 , 66.563667 ]
+lats_sa = sa_reaches.variables['y'][:]
+latli_sa = np.argmin( np.abs( lats_sa - latbounds_sa[1] ) )
+latui_sa = np.argmin( np.abs( lats_sa - latbounds_sa[0] ) )
+sa_nonarc_w = sa_reaches.variables['width'][latli_sa:latui_sa]
+sa_nonarc_s = sa_reaches.variables['slope'][latli_sa:latui_sa]
+
+#%% NON-Arctic Subset TUPLE CONCATENATING
+#WIDTH NON-Arctic Subset
+width_non_tuple = (eu_nonarc_w , as_nonarc_w , na_nonarc_w , sa_nonarc_w, oc_nonarc_w, af_nonarc_w)
+width_non_conc = np.concatenate(width_non_tuple)
+#SLOPE NON-Arctic Subset
+slope_non_tuple = (eu_nonarc_s , as_nonarc_s , na_nonarc_s , sa_nonarc_s, oc_nonarc_s, af_nonarc_s)
+slope_non_conc = np.concatenate(slope_non_tuple)
+#SINUOSITY NON-Arctic Subset
+sinu_tuple = (eu_nonarc_si , as_nonarc_si , na_nonarc_si , af_nonarc_si , oc_nonarc_si , sa_nonarc_si) 
+sinu_conc = np.concatenate(sinu_tuple)
+#Meander Wavelength NON-Arctic Subset
+wave_tuple = ( eu_nonarc_wave , as_nonarc_wave , na_nonarc_wave , af_nonarc_wave , oc_nonarc_wave , sa_nonarc_wave )
+wave_conc = np.concatenate(wave_tuple)
+#%% REACHES #s
+asnonreaches = len(as_nonarc_w)
+sanonreaches = len(sa_nonarc_w)
+nanonreaches = len(na_nonarc_w)
+ocnonreaches = len(oc_nonarc_w)
+afnonreaches = len(af_nonarc_w)
+eunonreaches = len(eu_nonarc_w)
+nontotal = (asnonreaches+sanonreaches+nanonreaches+ocnonreaches+afnonreaches+eunonreaches)
+print("AS number",asnonreaches),print("SA number",sanonreaches),print("NA number",nanonreaches),print("OC number",ocnonreaches),print("AF number",afnonreaches),print("EU number",eunonreaches),print("Non Number",nontotal)
+#%%Plot check, checking tuple variables to check if each variable is being input accurately.
+# f, ax=plt.subplots()
+# ax.hist(width_non_tuple,bins=1)
+# plt.show
+# f, ax=plt.subplots()
+# ax.hist(slope_non_tuple,bins=1)
+# plt.show
+# f, ax=plt.subplots()
+# ax.hist(sinu_tuple,bins=1)
+# plt.show
+# f, ax=plt.subplots()
+# ax.hist(wave_tuple,bins=1)
+# plt.show
+#%% NON ARCTIC HISTOGRAMS
+fig, ax = plt.subplots()
+#plt.rcParams['savefig.dpi']=1200
+ax.hist((width_non_conc), bins = 5000)
+Q25 = np.quantile(width_non_conc,0.25) 
+print("NonA Width q1", Q25)
+Q50 = np.quantile(width_non_conc, 0.5) 
+print("NonA Width q2", Q50)
+Q75 = np.quantile(width_non_conc, 0.75)
+print("NonA Width q3", Q75)
+plt.axvline(Q25, linestyle=('dotted'), color = 'k')
+plt.axvline(Q50, linestyle=('dashdot'), color = 'r')
+plt.axvline(Q75, linestyle=('dotted'), color = 'k')
+handles=('Q1: 54.0 m',
+         'Median: 85.0 m',
+         'Q3: 212.0 m')
+plt.legend(handles)
+plt.xscale('log')
+plt.title('Non-Arctic River Width',fontweight='bold')
+plt.xlabel('Width (m)',fontweight='bold')
+plt.ylabel('Number of Occurances' ,fontweight='bold')
+plt.savefig("nARWhd.png",format='png', dpi=1200)
+plt.show
+# Slope Non-Arctic
+fig, ax = plt.subplots()
+ax.hist(slope_non_conc, bins = [0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0,1.05,1.1,1.15,1.2,1.25,1.3,1.35,1.4,1.45,1.5,1.55,1.6,1.65,1.7,1.75,1.8,1.85,1.9,1.95,2.0,2.05,2.1,2.15,2.2,2.25,2.3,2.35,2.4,2.45,2.5,2.55,2.6,2.65,2.7,2.75,2.8,2.85,2.9,2.95,3.0])
+Q25 = np.quantile(slope_non_conc,0.25)
+print("NonA Slope q1" , Q25)
+Q50 = np.quantile(slope_non_conc, 0.5)
+print("NonA Slope q2" , Q50)
+Q75 = np.quantile(slope_non_conc, 0.75)
+print("NonA Slope q3" , Q75)
+plt.axvline(Q25, linestyle=('dotted'), color = 'k')
+plt.axvline(Q50, linestyle=('dashdot'), color = 'r')
+plt.axvline(Q75, linestyle=('dotted'), color = 'k')
+handles=('Q1: 2.01352e-12 m/km',
+         'Median: 0.2230 m/km',
+         'Q3: 1.2313 m/km') #8.8e^5 = 0.0000
+plt.legend(handles)
+plt.title('Non-Arctic River Slope',fontweight='bold')
+plt.xlabel('Slope (m/km)',fontweight='bold')
+plt.ylabel('Number of Occurances',fontweight='bold')
+plt.savefig("nARShd.png",format='png', dpi=1200)
+plt.show
+# SINUOSITY NON-ARCTIC
+fig, ax = plt.subplots()
+ax.hist(sinu_conc, bins = [1,1.05,1.10,1.15,1.2,1.25,1.3,1.35,1.4,1.45,1.5,1.55,1.6,1.65,1.7,1.75,1.8,1.85,1.9,1.95,2.0,2.05,2.1,2.15,2.2,2.25,2.3,2.35,2.4,2.45,2.5,2.55,2.6,2.65,2.7,2.75,2.8,2.85,2.9,2.95,3.0])
+Q25 = np.nanquantile(sinu_conc , 0.25)
+print("NonA Sinuosity q1",Q25)
+Q50 = np.nanquantile(sinu_conc , 0.5)
+print("NonA Sinuosity q2",Q50)
+Q75 = np.nanquantile(sinu_conc , 0.75)
+print("NonA Sinuosity q3",Q75)
+plt.axvline(Q25, linestyle=('dotted'), color = 'k')
+plt.axvline(Q50, linestyle=('dashdot'), color = 'r')
+plt.axvline(Q75, linestyle=('dotted'), color = 'k')
+handles=('Q1: 1.035',
+         'Median: 1.127',
+         'Q3: 1.386')
+plt.legend(handles)
+plt.title('Non-Arctic River Sinuosity',fontweight='bold')
+plt.xlabel('Sinuosity',fontweight='bold')
+plt.ylabel('Number of Occurances',fontweight='bold')
+plt.savefig("nARSinhd.png",format='png', dpi=1200)
+plt.show
+# MEANDER WAVELENGTH
+fig, ax = plt.subplots()
+ax.hist(wave_conc,bins= 100)
+Q25 = np.quantile(wave_conc, 0.25) 
+print("NonA WL q1", Q25)
+Q50 = np.quantile(wave_conc, 0.5) 
+print("NonA WL q2", Q50)
+Q75 = np.quantile(wave_conc, 0.75) 
+print("NonA WL q3", Q75)
+plt.axvline(Q25, linestyle=('dotted') , color = 'k')  
+plt.axvline(Q50, linestyle=('dashdot') , color = 'r')  
+plt.axvline(Q75, linestyle=('dotted') , color = 'k')
+handles=('Q1: 1145.37 m',
+         'Median: 1820.76 m',
+         'Q3: 3036.07 m')
+plt.legend(handles)
+plt.title('Non-Arctic River Meander Wavelength',fontweight='bold')
+plt.xlabel('Meander Wavelength m',fontweight='bold')
+plt.ylabel('Number of Occurences',fontweight='bold')
+plt.ticklabel_format(axis='y', style = 'sci', scilimits=(0,0))
+plt.savefig("nARMLhd.png",format='png', dpi=1200)
+plt.show
+#%% Scatter: Arctic Relationships
+#
+f, ax=plt.subplots()
+sns.set_style("darkgrid")
+plt.ylim([0,10])
+plt.xlim([0,7500])
+sns.scatterplot(x=arctic_sub_width, y=arctic_sub_slope)
+plt.title('Width vs. Slope')
+plt.ylabel("Slope (m/km)")
+plt.xlabel("Width (m)")
+
+#%%  KDE WIDTH COMPARISONS
+#Arctic vs Non arctic river width Kernel density estimation plots 
+#NON LOG SCALE X AXIS
+f, ax = plt.subplots()
+sns.set_style('whitegrid')
+sns.kdeplot(np.array(arctic_sub_width),log_scale=True, legend=True, color = 'b', label="Arctic")
+Q50 = np.quantile(arctic_sub_width, 0.5), 
+plt.axvline(Q50, linestyle = ('dashdot'), label = "Arctic Median")
+sns.kdeplot(np.array(width_non_conc),log_scale=True, legend=True, color = '000', label="non-Arctic")
+plt.title ('Arctic and non-Arctic River Width',fontweight='bold')
+plt.ylabel('Density',fontweight='bold')
+plt.xlabel('Width (m)',fontweight='bold')
+Q50non = np.quantile(width_non_conc, 0.5) 
+plt.axvline(Q50non, linestyle=('dashdot'), color = '000', label='non-Arctic Median')
+
+plt.legend()
+plt.savefig("A_nA_KDEhd.png",format='png', dpi=1200)
+plt.show
+
+#%% SCATTERS
+# #WIDTH
+# f, ax = plt.subplots(figsize=(5,5))
+# sns.despine(f, left=True, bottom=True)
+# sns.scatterplot(x=slope_non_conc, y=width_non_conc)
+# sns.scatterplot(x=arctic_sub_slope, y=arctic_sub_width)
+#%%
+f, ax = plt.subplots()
+sns.set_style('whitegrid')
+sns.kdeplot(np.array(as_width_arctic),log_scale=True, legend=True, label="Asia")
+#Q50 = np.quantile(as_width_arctic, 0.5), 
+#plt.axvline(Q50, linestyle = ('dashdot'), label = "Asia Median")
+sns.kdeplot(np.array(na_width_arctic),log_scale=True, legend=True, label="North America")
+#Q50 = np.quantile(na_width_arctic, 0.5), 
+#plt.axvline(Q50, linestyle = ('dashdot'), label = "North America Median")
+sns.kdeplot(np.array(eu_width_arctic),log_scale=True, legend=True, label="Europe")
+#Q50 = np.quantile(eu_width_arctic, 0.5), 
+#plt.axvline(Q50, linestyle = ('dashdot'), label = "Europe Median")
+plt.legend()
+plt.title('Arctic River Width Subset',fontweight='bold')
+plt.ylabel('Density',fontweight='bold')
+plt.xlabel('Width (m)',fontweight='bold')
+plt.savefig("ArcticKDEhd.png",format='png', dpi=1200)
+plt.show
+#%%
+# f, ax = plt.subplots()
+# sns.set_style('whitegrid')
+# sns.kdeplot(np.array(width_non_conc),
+#             log_scale=True , 
+#             label="Non-Arctic" , 
+#             legend=True)
+# sns.kdeplot(np.array(arctic_sub_width),
+#             log_scale=True , 
+#             label="Arctic",
+#             legend=True)
+# plt.legend()
+# plt.title('River Width')
+# plt.xlabel('Width(m)')
+# plt.show
+
+#%% Width
+f, ax = plt.subplots(figsize=(10,5))
+sns.kdeplot(np.array(as_nonarc_w), log_scale=True, label="Asia", legend=True) #GOOD
+sns.kdeplot(np.array(na_nonarc_w), log_scale=True, label="North America", legend=True) #GOOD
+sns.kdeplot(np.array(eu_nonarc_w), log_scale=True, label="Europe", legend=True) #GOOD
+sns.kdeplot(np.array(oc_nonarc_w), log_scale=True, label="Oceania", legend=True) #GOOD
+sns.kdeplot(np.array(af_nonarc_w), log_scale=True, label="Africa", legend=True) #GOOD
+sns.kdeplot(np.array(sa_nonarc_w), log_scale=True, label="South America", legend=True) #GOOD
+sns.kdeplot(np.array(arctic_sub_width), log_scale=True, label="Arctic Subset", legend=True, color='0',fill=True)
+plt.legend()
+plt.title('Continental and Arctic River Width',fontweight='bold')
+plt.xlabel('Width(m)',fontweight='bold')
+plt.ylabel('Density',fontweight='bold')
+plt.savefig("ContinentalArcticKDEhd.png",format='png', dpi=1200)
+plt.show
+#%% Slope
+# f, ax = plt.subplots(figsize=(15,10))
+# sns.kdeplot(np.array(as_nonarc_s),log_scale=True, label="Asia", legend=True) #GOOD
+# sns.kdeplot(np.array(na_nonarc_s),log_scale=True, label="North America", legend=True) #GOOD
+# sns.kdeplot(np.array(eu_nonarc_s),log_scale=True, label="Europe", legend=True) #GOOD
+# sns.kdeplot(np.array(oc_nonarc_s),log_scale=True, label="Oceania", legend=True) #GOOD
+# sns.kdeplot(np.array(af_nonarc_s),log_scale=True, label="Africa", legend=True) #GOOD
+# sns.kdeplot(np.array(sa_nonarc_s), log_scale=True,label="South America", legend=True) #GOOD
+# sns.kdeplot(np.array(arctic_sub_slope),log_scale=True, label="Arctic Subset", legend=True, color='0',fill=True)
+# plt.legend()
+# plt.title('Continental and Arctic River Width',fontweight='bold')
+# plt.xlabel('Width(m)',fontweight='bold')
+# plt.ylabel('Density',fontweight='bold')
+# plt.savefig("ContinentalArcticKDEhd.png",format='png', dpi=1200)
+# plt.show
+#%%Wave
+f, ax = plt.subplots(figsize=(10,5))
+sns.kdeplot(np.array(as_nonarc_wave), label="Asia", legend=True) #GOOD
+sns.kdeplot(np.array(na_nonarc_wave), label="North America", legend=True) #GOOD
+sns.kdeplot(np.array(eu_nonarc_wave), label="Europe", legend=True) #GOOD
+sns.kdeplot(np.array(oc_nonarc_wave), label="Oceania", legend=True) #GOOD
+sns.kdeplot(np.array(af_nonarc_wave), label="Africa", legend=True) #GOOD
+sns.kdeplot(np.array(sa_nonarc_wave), label="South America", legend=True) #GOOD
+sns.kdeplot(np.array(arctic_sub_meander), label="Arctic Subset", legend=True, color='0',fill=False)
+plt.legend()
+plt.title('Meander Length Comparison',fontweight='bold')
+plt.xlabel('Meander Wavelength',fontweight='bold')
+plt.ylabel("Density",fontweight='bold')
+plt.savefig("MeanderLengthKDEhd.png",format='png', dpi=1200)
+plt.show
+
